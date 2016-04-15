@@ -1,0 +1,107 @@
+﻿<html>
+<head>
+<title>玉山匯率監控 App</title>
+
+<script>
+	// inlcuding jquery
+	window.$ = window.jQuery = require('./js/jquery-1.12.3.min.js');
+	const ipcRenderer = require('electron').ipcRenderer; // In renderer process (web page).
+	var curr_val;
+
+	$(document).ready(function() {
+		ipcRenderer.on('asynchronous-reply', function(event, arg) {
+			var rates = JSON.parse( JSON.parse(arg).d ).Rates;
+			const reloadTime = 60000;
+
+			// Get usd data
+			for (var i = rates.length - 1; i >= 0; i--) {
+				var rate = rates[i];
+				if (rate.Key == 'USD') {
+					console.log(rate);
+
+					curr_val = rate.SBoardRate;
+
+					$('#currency').html(rate.Title);
+					$('#updTime').text(rate.UpdateTime);
+					$('#rate').text(rate.SBoardRate);
+
+					alertInfo();
+				}
+			}
+
+			// Animate and next request
+			var width = $('#progress').css('width') == '0px'? '100%': '0%';
+			$('#progress').animate({width: width}, reloadTime, function() {
+				ipcRenderer.send('asynchronous-message', 'ping');
+			});
+		});
+
+		// calling main process asynchronous
+		ipcRenderer.send('asynchronous-message', 'ping');
+
+		// Open the given external protocol URL in the desktop's default manner.
+		$('#buy').on('click', function() {
+			const shell = require('electron').shell;
+
+			shell.openExternal("https://www.esunbank.com.tw/bank/personal/deposit/rate/forex/foreign-exchange-rates");
+		});
+
+		// event
+		$('#setup').on('click', function() {
+			alertInfo();
+		});
+	});
+
+	// Setting
+	function alertInfo() {
+		var val = $('#numeric').val();
+
+		if ( $('#setup').prop('checked') && val != '' && !isNaN(val) && val <= curr_val) {
+			var ret = ipcRenderer.sendSync('synchronous-message', 'ping') // calling main process synchronous
+
+			console.log('synchronous ' + ret); // prints "pong"
+		}
+	}
+</script>
+
+<!-- Latest compiled and minified CSS & JS -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+
+
+<style type="text/css">
+	#progress {border: 1px solid green; width: 100%;}
+
+</style>
+</head>
+<body>
+	<div class="container-fluid">
+		<hr id="progress" />
+		<div class="page-header">
+			<h1 id="currency"></h1>
+		</div>
+
+		<table class="table table-bordered">
+			<tbody>
+				<tr>
+					<td id="updTime"></td>
+					<td id="rate"></td>
+				</tr>
+			</tbody>
+		</table>
+
+		<form class="form-inline" role="form">
+			<div class="form-group">
+				<label for="numeric">警示價位 : </label>
+				<input type="numeric" class="form-control" id="numeric" placeholder="30.0">
+			</div>
+
+			<div class="checkbox">
+				<label><input id="setup" type="checkbox">設定</label>
+			</div>
+		</form>
+
+		<a id="buy" href="#" class="btn btn-info" role="button">Buy it now !</a>
+	</div>
+</body>
+</html>
