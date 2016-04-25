@@ -2,9 +2,8 @@
 <head>
 <title>玉山匯率監控 App</title>
 
-<script>
-	// inlcuding jquery
-	window.$ = window.jQuery = require('./js/jquery-1.12.3.min.js');
+<script>	
+	window.$ = window.jQuery = require('./js/jquery-1.12.3.min.js'); // including jquery
 	const ipcRenderer = require('electron').ipcRenderer; // In renderer process (web page).
 	var curr_val;
 
@@ -32,12 +31,12 @@
 			// Animate and next request
 			var width = $('#progress').css('width') == '0px'? '100%': '0%';
 			$('#progress').animate({width: width}, reloadTime, function() {
-				ipcRenderer.send('asynchronous-message', 'ping');
+				ipcRenderer.send('asynchronous-message', 'call by renderer proecess');
 			});
 		});
 
 		// calling main process asynchronous
-		ipcRenderer.send('asynchronous-message', 'ping');
+		ipcRenderer.send('asynchronous-message', 'call by renderer proecess');
 
 		// Open the given external protocol URL in the desktop's default manner.
 		$('#buy').on('click', function() {
@@ -56,8 +55,8 @@
 	function alertInfo() {
 		var val = $('#numeric').val();
 
-		if ( $('#setup').prop('checked') && val != '' && !isNaN(val) && val <= curr_val) {
-			var ret = ipcRenderer.sendSync('synchronous-message', 'ping') // calling main process synchronous
+		if ( $('#setup').prop('checked') && val != '' && !isNaN(val) && parseFloat(val) >= parseFloat(curr_val)) {
+			var ret = ipcRenderer.sendSync('synchronous-message', 'called by renderer proecess') // calling main process synchronous
 
 			console.log('synchronous ' + ret); // prints "pong"
 		}
@@ -74,6 +73,7 @@
 
 </style>
 </head>
+
 <body>
 	<div class="container-fluid">
 		<hr id="progress" />
