@@ -6,8 +6,6 @@ var menubar = require('menubar')
 var mb = menubar({
 	"always-on-top": true,
 	"width": 1200,
-	"transparent": true,
-	"frame": false,
 	"height": 500
 });
 
@@ -16,7 +14,6 @@ var mb = menubar({
 mb.on('ready', function() {
 	console.log('app is ready');
 
-	console.log(mb.window);
 	mb.showWindow();
 	// In main process.
 	const ipcMain = require('electron').ipcMain;
@@ -89,7 +86,7 @@ mb.on('ready', function() {
 		});
 
 		// return value
-		event.returnValue = 'pong';
+		event.returnValue = 'return from main process';
 	});
 });
 
